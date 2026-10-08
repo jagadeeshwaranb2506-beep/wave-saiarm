@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Wave Frequency Sensor & Network Coverage Area Prototype</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    /* Custom scrollbar & canvas aesthetics */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--card, #111827); }
+    ::-webkit-scrollbar-thumb { background: var(--border, #374151); border-radius: 4px; }
+    .glass-panel {
+      background: var(--card, rgba(17, 24, 39, 0.85));
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+    }
+  </style>
+</head>
+<body class="bg-transparent text-[var(--foreground,#f3f4f6)] antialiased p-3 md:p-5 min-h-screen font-sans">
+
+  <div class="max-w-7xl mx-auto space-y-4">
+    
+    <!-- Header -->
+    <header class="glass-panel rounded-2xl p-4 md:p-5 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="relative flex items-center justify-center w-11 h-11 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+          <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          <span class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[var(--card,#111827)]"></span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold tracking-tight text-[var(--foreground)]">AI Wave Frequency & Coverage Sensor</h1>
+            <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active Prototype</span>
+          </div>
+          <p class="text-xs text-[var(--muted-foreground,#9ca3af)]">Real-time RF Spectrum Sensing, Electromagnetic Propagation & Neural Anomaly Detection Engine</p>
+        </div>
+      </div>
+
+      <!-- Header Metrics Badge -->
+      <div class="flex items-center gap-3 text-xs">
+        <div class="glass-panel px-3 py-2 rounded-xl flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+          <span class="text-[var(--muted-foreground)]">AI Sampling Rate:</span>
+          <span class="font-mono font-bold text-indigo-400">100 MSps</span>
+        </div>
+        <div class="glass-panel px-3 py-2 rounded-xl flex items-center gap-2">
+          <span class="text-[var(--muted-foreground)]">Active Spectrum:</span>
+          <span class="font-mono font-bold text-emerald-400">700MHz – 28GHz</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Control Bar & Toolbar -->
+    <div class="glass-panel rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+      
+      <!-- Presets -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="font-medium text-[var(--muted-foreground)]">Scenarios:</span>
+        <button onclick="loadPreset('urban5g')" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 transition font-medium">
+          🏙️ 5G Dense Urban
+        </button>
+        <button onclick="loadPreset('jamming')" class="px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/30 transition font-medium">
+          🚨 RF Jamming Attack
+        </button>
+        <button onclick="loadPreset('rural')" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 transition font-medium">
+          🌾 Rural Low-Band
+        </button>
+        <button onclick="loadPreset('hetnet')" class="px-3 py-1.5 rounded-lg bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-500/30 transition font-medium">
+          📡 Multi-Band HetNet
+        </button>
+      </div>
+
+      <!-- Map Display View Toggle -->
+      <div class="flex items-center gap-1.5 bg-black/20 p-1 rounded-lg border border-[var(--border,rgba(255,255,255,0.1))]">
+        <button id="btn-mode-heatmap" onclick="setViewMode('heatmap')" class="px-2.5 py-1 rounded text-xs font-semibold bg-indigo-600 text-white shadow">
+          Heatmap RSSI
+        </button>
+        <button id="btn-mode-waves" onclick="setViewMode('waves')" class="px-2.5 py-1 rounded text-xs font-semibold text-[var(--muted-foreground)] hover:text-white transition">
+          Wave Propagation
+        </button>
+        <button id="btn-mode-rays" onclick="setViewMode('rays')" class="px-2.5 py-1 rounded text-xs font-semibold text-[var(--muted-foreground)] hover:text-white transition">
+          Beam Rays
+        </button>
+        <button id="btn-mode-interference" onclick="setViewMode('interference')" class="px-2.5 py-1 rounded text-xs font-semibold text-[var(--muted-foreground)] hover:text-white transition">
+          SINR Interference
+        </button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2">
+        <button onclick="addTower()" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center gap-1 shadow transition">
+          <span>+ Add Tower</span>
+        </button>
+        <button onclick="triggerAIOptimizer()" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold flex items-center gap-1 shadow transition">
+          <span>⚡ AI Auto-Optimize</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Main Grid Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      
+      <!-- Left Panel: Spatial Coverage Canvas Map (Col 7) -->
+      <div class="lg:col-span-7 flex flex-col space-y-3">
+        <div class="glass-panel rounded-2xl p-4 flex flex-col relative overflow-hidden">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
+              <h2 class="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">Spatial RF Coverage Grid</h2>
+            </div>
+            <div class="text-xs text-[var(--muted-foreground)] flex items-center gap-3">
+              <span><strong class="text-indigo-400">Drag:</strong> Towers / Probe / Obstacles</span>
+              <span id="coord-readout" class="font-mono text-emerald-400">X: 0m, Y: 0m</span>
+            </div>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="relative w-full aspect-[4/3] bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-inner group">
+            <canvas id="mapCanvas" class="w-full h-full cursor-crosshair block"></canvas>
+            
+            <!-- Map Legend Overlay -->
+            <div class="absolute bottom-3 left-3 glass-panel px-3 py-2 rounded-lg text-xs space-y-1 backdrop-blur-md bg-slate-900/80 border-slate-700">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Signal Strength (RSSI)</div>
+              <div class="flex items-center gap-1 text-[11px] font-mono">
+                <span class="w-3 h-3 rounded-sm bg-emerald-500 inline-block"></span> >-65dBm (Strong)
+                <span class="w-3 h-3 rounded-sm bg-yellow-500 inline-block ml-2"></span> -85dBm (Good)
+                <span class="w-3 h-3 rounded-sm bg-rose-500 inline-block ml-2"></span> <-100dBm (Weak)
+              </div>
+            </div>
+
+            <!-- Floating Prompt Hint -->
+            <div class="absolute top-3 right-3 px-2.5 py-1 rounded bg-slate-900/80 text-[11px] text-slate-300 border border-slate-700 backdrop-blur pointer-events-none">
+              📡 Click & Drag elements on map
+            </div>
+          </div>
+        </div>
+
+        <!-- Node & Tower Inspector Box -->
+        <div id="inspector-panel" class="glass-panel rounded-xl p-4 text-xs space-y-3">
+          <div class="flex items-center justify-between border-b border-[var(--border,rgba(255,255,255,0.1))] pb-2">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+              <h3 class="font-bold text-sm text-[var(--foreground)]" id="inspector-title">Base Station 1 Parameters</h3>
+            </div>
+            <button onclick="removeSelectedTower()" id="btn-delete-tower" class="px-2 py-1 rounded bg-rose-500/20 text-rose-300 hover:bg-rose-500/40 border border-rose-500/30 transition">Delete Base Station</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[var(--muted-foreground)] mb-1">Carrier Frequency (GHz)</label>
+              <div class="flex items-center gap-2">
+                <input type="range" id="input-freq" min="0.7" max="28.0" step="0.1" value="3.5" class="w-full accent-indigo-500" oninput="updateSelectedTower()">
+                <span id="val-freq" class="font-mono font-bold text-indigo-400 w-16 text-right">3.5 GHz</span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[var(--muted-foreground)] mb-1">Tx Power (dBm / W)</label>
+              <div class="flex items-center gap-2">
+                <input type="range" id="input-power" min="10" max="50" step="1" value="38" class="w-full accent-emerald-500" oninput="updateSelectedTower()">
+                <span id="val-power" class="font-mono font-bold text-emerald-400 w-16 text-right">38 dBm</span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[var(--muted-foreground)] mb-1">Beam Angle & Width</label>
+              <div class="flex items-center gap-2">
+                <input type="range" id="input-beam" min="0" max="360" step="5" value="45" class="w-full accent-amber-500" oninput="updateSelectedTower()">
+                <span id="val-beam" class="font-mono font-bold text-amber-400 w-16 text-right">45°</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Panel: Spectrum Analyzer & AI Neural Intelligence (Col 5) -->
+      <div class="lg:col-span-5 flex flex-col space-y-3">
+        
+        <!-- Live FFT Spectrum Analyzer -->
+        <div class="glass-panel rounded-2xl p-4 flex flex-col space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+              <h2 class="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">AI Sensor Spectrum Analyzer (FFT)</h2>
+            </div>
+            <span class="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Sensor Position Live</span>
+          </div>
+
+          <!-- Canvas Spectrum -->
+          <div class="relative w-full h-44 bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-inner">
+            <canvas id="spectrumCanvas" class="w-full h-full block"></canvas>
+          </div>
+        </div>
+
+        <!-- Sensor Real-Time Diagnostics Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div class="glass-panel p-2.5 rounded-xl flex flex-col justify-between">
+            <span class="text-[11px] text-[var(--muted-foreground)]">Detected Carrier</span>
+            <div id="stat-freq" class="text-base font-bold font-mono text-indigo-400 mt-1">3.50 GHz</div>
+            <span class="text-[10px] text-slate-400">Sub-6 5G Band</span>
+          </div>
+
+          <div class="glass-panel p-2.5 rounded-xl flex flex-col justify-between">
+            <span class="text-[11px] text-[var(--muted-foreground)]">Signal Power (RSSI)</span>
+            <div id="stat-rssi" class="text-base font-bold font-mono text-emerald-400 mt-1">-64.2 dBm</div>
+            <span id="stat-rssi-label" class="text-[10px] text-emerald-400 font-semibold">Strong Signal</span>
+          </div>
+
+          <div class="glass-panel p-2.5 rounded-xl flex flex-col justify-between">
+            <span class="text-[11px] text-[var(--muted-foreground)]">SINR Noise Ratio</span>
+            <div id="stat-sinr" class="text-base font-bold font-mono text-amber-400 mt-1">26.8 dB</div>
+            <span class="text-[10px] text-slate-400">Low Interference</span>
+          </div>
+
+          <div class="glass-panel p-2.5 rounded-xl flex flex-col justify-between">
+            <span class="text-[11px] text-[var(--muted-foreground)]">AI Quality Index</span>
+            <div id="stat-sqi" class="text-base font-bold font-mono text-teal-400 mt-1">98 / 100</div>
+            <span class="text-[10px] text-teal-400 font-semibold">Optimal Link</span>
+          </div>
+        </div>
+
+        <!-- AI Neural Diagnostic & Anomaly Engine Panel -->
+        <div class="glass-panel rounded-2xl p-4 space-y-3 flex-1 flex flex-col">
+          <div class="flex items-center justify-between border-b border-[var(--border,rgba(255,255,255,0.1))] pb-2">
+            <div class="flex items-center gap-2">
+              <span class="relative flex h-3 w-3">
+                <span id="ai-status-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span id="ai-status-dot" class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+              <h2 class="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">AI Sensor Anomaly Engine</h2>
+            </div>
+            <span id="ai-state-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              STATE: OPTIMAL
+            </span>
+          </div>
+
+          <!-- AI Diagnostic Stream Box -->
+          <div class="bg-black/30 rounded-xl p-3 border border-slate-800 space-y-2 font-mono text-xs flex-1 min-h-[140px] max-h-[180px] overflow-y-auto" id="ai-log">
+            <!-- Log entries inserted dynamically -->
+          </div>
+
+          <!-- Quick AI Remediation Actions -->
+          <div class="pt-1 flex items-center justify-between gap-2">
+            <span class="text-[11px] text-[var(--muted-foreground)]">Recommended Action:</span>
+            <button onclick="triggerAIFix()" id="btn-ai-fix" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow transition flex items-center gap-1">
+              <span>🪄 Apply AI Fix</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    /* ==========================================================================
+       AI Wave Frequency Sensor & Network Coverage Simulator Engine
+       ========================================================================== */
+
+    // Application State
+    const state = {
+      viewMode: 'heatmap', // 'heatmap', 'waves', 'rays', 'interference'
+      selectedTowerId: 1,
+      sensor: { x: 340, y: 220, isDragging: false },
+      towers: [
+        { id: 1, x: 120, y: 110, freqGHz: 3.5, powerDbm: 42, beamAngle: 45, beamWidth: 120, color: '#6366f1' },
+        { id: 2, x: 480, y: 130, freqGHz: 28.0, powerDbm: 48, beamAngle: 210, beamWidth: 60, color: '#10b981' },
+        { id: 3, x: 260, y: 320, freqGHz: 0.7, powerDbm: 45, beamAngle: 0, beamWidth: 360, color: '#f59e0b' }
+      ],
+      obstacles: [
+        { x: 260, y: 140, w: 70, h: 100, label: 'Building A' },
+        { x: 410, y: 240, w: 90, h: 60, label: 'Tech Park' }
+      ],
+      time: 0,
+      draggingNode: null, // { type: 'sensor'|'tower'|'obstacle', id/index }
+      dragOffset: { x: 0, y: 0 }
+    };
+
+    // Canvas references
+    let mapCanvas, mapCtx;
+    let spectrumCanvas, spectrumCtx;
+    let mapWidth = 0, mapHeight = 0;
+
+    // Heatmap offscreen canvas buffer for high performance
+    let heatmapCanvas, heatmapCtx;
+
+    // Initialize Application
+    window.addEventListener('DOMContentLoaded', () => {
+      mapCanvas = document.getElementById('mapCanvas');
+      mapCtx = mapCanvas.getContext('2d');
+      
+      spectrumCanvas = document.getElementById('spectrumCanvas');
+      spectrumCtx = spectrumCanvas.getContext('2d');
+
+      heatmapCanvas = document.createElement('canvas');
+      heatmapCtx = heatmapCanvas.getContext('2d');
+
+      resizeCanvases();
+      window.addEventListener('resize', resizeCanvases);
+
+      setupInteractions();
+      updateInspectorUI();
+      
+      // Add initial AI log entry
+      addAILog("AI Spectrum Sensor initialized. Scanning 700MHz to 28GHz bands...");
+      addAILog("Baseline noise floor measured at -102 dBm. Signal propagation active.");
+
+      // Animation Loop (60 FPS)
+      requestAnimationFrame(renderLoop);
+    });
+
+    function resizeCanvases() {
+      const rect = mapCanvas.parentElement.getBoundingClientRect();
+      mapCanvas.width = rect.width;
+      mapCanvas.height = rect.height;
+      mapWidth = rect.width;
+      mapHeight = rect.height;
+
+      heatmapCanvas.width = Math.floor(mapWidth / 4);
+      heatmapCanvas.height = Math.floor(mapHeight / 4);
+
+      const specRect = spectrumCanvas.parentElement.getBoundingClientRect();
+      spectrumCanvas.width = specRect.width;
+      spectrumCanvas.height = specRect.height;
+    }
+
+    /* ==========================================================================
+       Physics & Propagation Calculations
+       ========================================================================== */
+    
+    // Log-Distance Path Loss Model (Free Space + Shadowing)
+    function calcReceivedPower(tower, targetX, targetY) {
+      const dx = targetX - tower.x;
+      const dy = targetY - tower.y;
+      const distPx = Math.sqrt(dx * dx + dy * dy);
+      if (distPx < 1) return tower.powerDbm;
+
+      // Distance conversion: 100 pixels = 100 meters
+      const distMeters = Math.max(5, distPx * 2);
+
+      // Friis / Log-distance Path Loss exponent n (2.0 free space, 3.5 urban)
+      let n = 2.8;
+      
+      // Directional Beamforming gain factor
+      let beamGain = 0;
+      if (tower.beamWidth < 360) {
+        let angleDeg = Math.atan2(dy, dx) * (180 / Math.PI);
+        if (angleDeg < 0) angleDeg += 360;
+        let diff = Math.abs(angleDeg - tower.beamAngle);
+        if (diff > 180) diff = 360 - diff;
+        
+        if (diff <= tower.beamWidth / 2) {
+          beamGain = 12 * Math.cos((diff / (tower.beamWidth / 2)) * (Math.PI / 2));
+        } else {
+          beamGain = -25; // Side lobe attenuation
+        }
+      }
+
+      // Frequency attenuation effect (higher frequency = higher path loss)
+      const freqMHz = tower.freqGHz * 1000;
+      const fspl = 20 * Math.log10(distMeters) + 20 * Math.log10(freqMHz) - 27.55;
+
+      // Obstacle attenuation ray tracing
+      let obstacleLoss = 0;
+      for (const obs of state.obstacles) {
+        if (lineIntersectsRect(tower.x, tower.y, targetX, targetY, obs)) {
+          obstacleLoss += (tower.freqGHz > 10 ? 25 : 12); // mmWave severely blocked by solid walls
+        }
+      }
+
+      const rssi = tower.powerDbm + beamGain - fspl - obstacleLoss;
+      return Math.max(-125, rssi);
+    }
+
+    function lineIntersectsRect(x1, y1, x2, y2, rect) {
+      const minX = rect.x, maxX = rect.x + rect.w;
+      const minY = rect.y, maxY = rect.y + rect.h;
+
+      // Quick bounding box check
+      if (Math.max(x1, x2) < minX || Math.min(x1, x2) > maxX ||
+          Math.max(y1, y2) < minY || Math.min(y1, y2) > maxY) return false;
+
+      // Midpoint sampling check for shadow obstruction
+      for (let t = 0.1; t <= 0.9; t += 0.1) {
+        const px = x1 + (x2 - x1) * t;
+        const py = y1 + (y2 - y1) * t;
+        if (px >= minX && px <= maxX && py >= minY && py <= maxY) return true;
+      }
+      return false;
+    }
+
+    /* ==========================================================================
+       Rendering Engine
+       ========================================================================== */
+
+    function renderLoop() {
+      state.time += 0.05;
+
+      // Clear & Draw Spatial Grid Map
+      renderMap();
+
+      // Render Spectrum Analyzer (FFT)
+      renderSpectrum();
+
+      // Run AI Diagnostic Sensor Analytics
+      runAISensorDiagnostics();
+
+      requestAnimationFrame(renderLoop);
+    }
+
+    function renderMap() {
+      mapCtx.clearRect(0, 0, mapWidth, mapHeight);
+
+      // 1. Draw Grid Lines
+      mapCtx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+      mapCtx.lineWidth = 1;
+      const gridSize = 40;
+      for (let x = 0; x < mapWidth; x += gridSize) {
+        mapCtx.beginPath(); mapCtx.moveTo(x, 0); mapCtx.lineTo(x, mapHeight); mapCtx.stroke();
+      }
+      for (let y = 0; y < mapHeight; y += gridSize) {
+        mapCtx.beginPath(); mapCtx.moveTo(0, y); mapCtx.lineTo(mapWidth, y); mapCtx.stroke();
+      }
+
+      // 2. Draw Coverage Overlay (Heatmap or Waves or Rays)
+      if (state.viewMode === 'heatmap' || state.viewMode === 'interference') {
+        renderHeatmap();
+        mapCtx.drawImage(heatmapCanvas, 0, 0, mapWidth, mapHeight);
+      } else if (state.viewMode === 'waves') {
+        renderWaveRipples();
+      } else if (state.viewMode === 'rays') {
+        renderBeamRays();
+      }
+
+      // 3. Draw Obstacles (Buildings)
+      for (const obs of state.obstacles) {
+        mapCtx.fillStyle = 'rgba(30, 41, 59, 0.85)';
+        mapCtx.strokeStyle = '#475569';
+        mapCtx.lineWidth = 2;
+        mapCtx.beginPath();
+        mapCtx.roundRect(obs.x, obs.y, obs.w, obs.h, 8);
+        mapCtx.fill();
+        mapCtx.stroke();
+
+        // Building Label
+        mapCtx.fillStyle = '#94a3b8';
+        mapCtx.font = '10px sans-serif';
+        mapCtx.textAlign = 'center';
+        mapCtx.fillText(obs.label, obs.x + obs.w / 2, obs.y + obs.h / 2 + 3);
+      }
+
+      // 4. Draw Towers (Base Stations)
+      for (const tower of state.towers) {
+        const isSelected = (tower.id === state.selectedTowerId);
+
+        // Beam direction cone outline
+        if (tower.beamWidth < 360) {
+          const radCenter = tower.beamAngle * (Math.PI / 180);
+          const radHalf = (tower.beamWidth / 2) * (Math.PI / 180);
+          mapCtx.fillStyle = tower.color + '15';
+          mapCtx.strokeStyle = tower.color + '50';
+          mapCtx.beginPath();
+          mapCtx.moveTo(tower.x, tower.y);
+          mapCtx.arc(tower.x, tower.y, 160, radCenter - radHalf, radCenter + radHalf);
+          mapCtx.closePath();
+          mapCtx.fill();
+          mapCtx.stroke();
+        }
+
+        // Base Station Pulsing Ring
+        mapCtx.strokeStyle = tower.color;
+        mapCtx.lineWidth = isSelected ? 3 : 1.5;
+        mapCtx.beginPath();
+        mapCtx.arc(tower.x, tower.y, 14 + Math.sin(state.time * 3) * 2, 0, Math.PI * 2);
+        mapCtx.stroke();
+
+        // Tower Icon Body
+        mapCtx.fillStyle = isSelected ? '#ffffff' : tower.color;
+        mapCtx.beginPath();
+        mapCtx.arc(tower.x, tower.y, 9, 0, Math.PI * 2);
+        mapCtx.fill();
+
+        // Antenna symbol
+        mapCtx.fillStyle = '#0f172a';
+        mapCtx.beginPath();
+        mapCtx.arc(tower.x, tower.y, 4, 0, Math.PI * 2);
+        mapCtx.fill();
+
+        // Tower Label Badge
+        mapCtx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        mapCtx.strokeStyle = isSelected ? '#6366f1' : '#334155';
+        mapCtx.lineWidth = 1;
+        mapCtx.beginPath();
+        mapCtx.roundRect(tower.x - 35, tower.y - 32, 70, 18, 4);
+        mapCtx.fill();
+        mapCtx.stroke();
+
+        mapCtx.fillStyle = isSelected ? '#818cf8' : '#e2e8f0';
+        mapCtx.font = 'bold 10px monospace';
+        mapCtx.textAlign = 'center';
+        mapCtx.fillText(`${tower.freqGHz}G | ${tower.powerDbm}dB`, tower.x, tower.y - 20);
+      }
+
+      // 5. Draw AI Sensor Node Probe
+      const s = state.sensor;
+      mapCtx.save();
+      
+      // Sensor Outer Glow Ring
+      const grad = mapCtx.createRadialGradient(s.x, s.y, 2, s.x, s.y, 28);
+      grad.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+      grad.addColorStop(1, 'rgba(16, 185, 129, 0)');
+      mapCtx.fillStyle = grad;
+      mapCtx.beginPath();
+      mapCtx.arc(s.x, s.y, 28, 0, Math.PI * 2);
+      mapCtx.fill();
+
+      // Target Crosshair Lines
+      mapCtx.strokeStyle = '#10b981';
+      mapCtx.lineWidth = 1.5;
+      mapCtx.beginPath();
+      mapCtx.moveTo(s.x - 12, s.y); mapCtx.lineTo(s.x + 12, s.y);
+      mapCtx.moveTo(s.x, s.y - 12); mapCtx.lineTo(s.x, s.y + 12);
+      mapCtx.stroke();
+
+      // Sensor Core Node
+      mapCtx.fillStyle = '#10b981';
+      mapCtx.beginPath();
+      mapCtx.arc(s.x, s.y, 6, 0, Math.PI * 2);
+      mapCtx.fill();
+
+      // Sensor Label Badge
+      mapCtx.fillStyle = '#064e3b';
+      mapCtx.strokeStyle = '#34d399';
+      mapCtx.lineWidth = 1;
+      mapCtx.beginPath();
+      mapCtx.roundRect(s.x + 10, s.y - 22, 90, 18, 4);
+      mapCtx.fill();
+      mapCtx.stroke();
+
+      mapCtx.fillStyle = '#a7f3d0';
+      mapCtx.font = 'bold 10px monospace';
+      mapCtx.textAlign = 'center';
+      mapCtx.fillText('🤖 AI SENSOR', s.x + 55, s.y - 10);
+
+      mapCtx.restore();
+    }
+
+    // Render Fast Heatmap Buffer
+    function renderHeatmap() {
+      const bw = heatmapCanvas.width;
+      const bh = heatmapCanvas.height;
+      const imgData = heatmapCtx.createImageData(bw, bh);
+      const data = imgData.data;
+
+      const scaleX = mapWidth / bw;
+      const scaleY = mapHeight / bh;
+
+      for (let y = 0; y < bh; y++) {
+        for (let x = 0; x < bw; x++) {
+          const mapX = x * scaleX;
+          const mapY = y * scaleY;
+
+          let maxRssi = -130;
+          let secondMax = -130;
+
+          for (const tower of state.towers) {
+            const pwr = calcReceivedPower(tower, mapX, mapY);
+            if (pwr > maxRssi) {
+              secondMax = maxRssi;
+              maxRssi = pwr;
+            } else if (pwr > secondMax) {
+              secondMax = pwr;
+            }
+          }
+
+          const idx = (y * bw + x) * 4;
+
+          if (state.viewMode === 'interference') {
+            // SINR = Signal / (Interference + Noise)
+            const sinr = maxRssi - secondMax; // dB difference
+            if (sinr < 3) {
+              // High Interference Zone (Purple / Red)
+              data[idx] = 225; data[idx+1] = 29; data[idx+2] = 72; data[idx+3] = 160;
+            } else if (sinr < 10) {
+              // Moderate Interference (Yellow)
+              data[idx] = 234; data[idx+1] = 179; data[idx+2] = 8; data[idx+3] = 110;
+            } else {
+              // Clean channel (Transparent Green)
+              data[idx] = 16; data[idx+1] = 185; data[idx+2] = 129; data[idx+3] = 40;
+            }
+          } else {
+            // Standard RSSI Coverage Heatmap
+            // Normalization: -110 dBm (0.0) to -50 dBm (1.0)
+            let norm = (maxRssi + 110) / 60;
+            norm = Math.max(0, Math.min(1, norm));
+
+            if (norm > 0.65) {
+              // High Signal (Green/Teal)
+              data[idx] = 16; data[idx+1] = 185; data[idx+2] = 129; data[idx+3] = Math.floor(norm * 170);
+            } else if (norm > 0.35) {
+              // Medium Signal (Yellow/Orange)
+              data[idx] = 245; data[idx+1] = 158; data[idx+2] = 11; data[idx+3] = Math.floor(norm * 160);
+            } else {
+              // Low Signal (Red/Dark Purple)
+              data[idx] = 239; data[idx+1] = 68; data[idx+2] = 68; data[idx+3] = Math.floor((1 - norm) * 120);
+            }
+          }
+        }
+      }
+
+      heatmapCtx.putImageData(imgData, 0, 0);
+    }
+
+    // Render Wave Propagation Phase Ripples
+    function renderWaveRipples() {
+      for (const tower of state.towers) {
+        const waveSpeed = 25;
+        const wavelength = 20 / tower.freqGHz; // Relative wavelength
+        
+        mapCtx.strokeStyle = tower.color + '80';
+        mapCtx.lineWidth = 1.5;
+
+        for (let r = (state.time * waveSpeed) % wavelength; r < 350; r += wavelength) {
+          mapCtx.beginPath();
+          mapCtx.arc(tower.x, tower.y, r, 0, Math.PI * 2);
+          mapCtx.stroke();
+        }
+      }
+    }
+
+    // Render Beam Rays & Line of Sight Vectors to AI Sensor
+    function renderBeamRays() {
+      for (const tower of state.towers) {
+        const rssi = calcReceivedPower(tower, state.sensor.x, state.sensor.y);
+        const hasLOS = !obstaclesInPath(tower.x, tower.y, state.sensor.x, state.sensor.y);
+
+        mapCtx.beginPath();
+        mapCtx.moveTo(tower.x, tower.y);
+        mapCtx.lineTo(state.sensor.x, state.sensor.y);
+
+        if (hasLOS) {
+          mapCtx.strokeStyle = tower.color;
+          mapCtx.setLineDash([6, 4]);
+        } else {
+          mapCtx.strokeStyle = '#ef4444'; // Blocked line
+          mapCtx.setLineDash([2, 4]);
+        }
+        mapCtx.lineWidth = Math.max(1, (rssi + 110) / 15);
+        mapCtx.stroke();
+        mapCtx.setLineDash([]); // Reset line dash
+      }
+    }
+
+    function obstaclesInPath(x1, y1, x2, y2) {
+      for (const obs of state.obstacles) {
+        if (lineIntersectsRect(x1, y1, x2, y2, obs)) return true;
+      }
+      return false;
+    }
+
+    /* ==========================================================================
+       Spectrum Analyzer (FFT) Canvas
+       ========================================================================== */
+
+    function renderSpectrum() {
+      const sw = spectrumCanvas.width;
+      const sh = spectrumCanvas.height;
+
+      spectrumCtx.fillStyle = '#020617';
+      spectrumCtx.fillRect(0, 0, sw, sh);
+
+      // Grid Lines
+      spectrumCtx.strokeStyle = 'rgba(255,255,255,0.06)';
+      spectrumCtx.lineWidth = 1;
+      for (let y = 20; y < sh; y += 30) {
+        spectrumCtx.beginPath(); spectrumCtx.moveTo(0, y); spectrumCtx.lineTo(sw, y); spectrumCtx.stroke();
+      }
+      for (let x = 40; x < sw; x += 60) {
+        spectrumCtx.beginPath(); spectrumCtx.moveTo(x, 0); spectrumCtx.lineTo(x, sh); spectrumCtx.stroke();
+      }
+
+      // X-Axis Frequency Scale (0.1 GHz to 30.0 GHz)
+      spectrumCtx.fillStyle = '#64748b';
+      spectrumCtx.font = '10px monospace';
+      spectrumCtx.textAlign = 'center';
+      spectrumCtx.fillText('700MHz', 40, sh - 6);
+      spectrumCtx.fillText('3.5GHz', sw * 0.3, sh - 6);
+      spectrumCtx.fillText('5.0GHz', sw * 0.5, sh - 6);
+      spectrumCtx.fillText('28.0GHz', sw * 0.9, sh - 6);
+
+      // Generate Spectrum Points (PSD curve)
+      spectrumCtx.beginPath();
+      spectrumCtx.moveTo(0, sh - 20);
+
+      const numBins = sw;
+      let dominantTower = null;
+      let maxPwr = -130;
+
+      for (let x = 0; x < numBins; x++) {
+        // Map x pixel to Frequency GHz (0 to 30 GHz)
+        const freqGhz = (x / sw) * 30.0;
+
+        // Baseline thermal noise floor (-105 dBm to -98 dBm with random noise)
+        let powerDbm = -102 + (Math.sin(x * 0.2 + state.time * 4) * 2) + (Math.random() * 3);
+
+        // Add Gaussian carrier peaks for active towers based on AI Sensor position
+        for (const tower of state.towers) {
+          const rxPwr = calcReceivedPower(tower, state.sensor.x, state.sensor.y);
+          const freqDiff = Math.abs(freqGhz - tower.freqGHz);
+
+          if (rxPwr > maxPwr) {
+            maxPwr = rxPwr;
+            dominantTower = tower;
+          }
+
+          // Bandwidth spread (Gaussian curve)
+          const bwGhz = tower.freqGHz > 10 ? 0.8 : 0.2; // mmWave wider bandwidth
+          if (freqDiff < bwGhz * 2) {
+            const peakGain = (rxPwr + 110); // scale up
+            const shape = Math.exp(-Math.pow(freqDiff / (bwGhz * 0.5), 2));
+            powerDbm += peakGain * shape;
+          }
+        }
+
+        // Map powerDbm (-110 to -30) to Canvas Y coordinate (sh-20 to 10)
+        let normY = (powerDbm + 110) / 90;
+        normY = Math.max(0, Math.min(1, normY));
+        const canvasY = (sh - 25) - normY * (sh - 35);
+
+        if (x === 0) spectrumCtx.moveTo(x, canvasY);
+        else spectrumCtx.lineTo(x, canvasY);
+      }
+
+      // Fill Gradient under spectrum curve
+      const grad = spectrumCtx.createLinearGradient(0, 0, 0, sh);
+      grad.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+      grad.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+      spectrumCtx.strokeStyle = '#34d399';
+      spectrumCtx.lineWidth = 2;
+      spectrumCtx.stroke();
+
+      // Peak Markers & Peak Detection Annotations
+      for (const tower of state.towers) {
+        const peakX = (tower.freqGHz / 30.0) * sw;
+        const rxPwr = calcReceivedPower(tower, state.sensor.x, state.sensor.y);
+
+        if (rxPwr > -100) {
+          spectrumCtx.strokeStyle = tower.color;
+          spectrumCtx.setLineDash([2, 2]);
+          spectrumCtx.beginPath();
+          spectrumCtx.moveTo(peakX, 15);
+          spectrumCtx.lineTo(peakX, sh - 25);
+          spectrumCtx.stroke();
+          spectrumCtx.setLineDash([]);
+
+          spectrumCtx.fillStyle = tower.color;
+          spectrumCtx.font = 'bold 9px monospace';
+          spectrumCtx.textAlign = 'center';
+          spectrumCtx.fillText(`${tower.freqGHz}GHz`, peakX, 12);
+        }
+      }
+    }
+
+    /* ==========================================================================
+       AI Neural Diagnostics & Analytics Engine
+       ========================================================================== */
+
+    function runAISensorDiagnostics() {
+      // Calculate localized signal parameters at AI sensor position
+      let bestPwr = -130;
+      let secondBestPwr = -130;
+      let primaryTower = null;
+
+      for (const tower of state.towers) {
+        const pwr = calcReceivedPower(tower, state.sensor.x, state.sensor.y);
+        if (pwr > bestPwr) {
+          secondBestPwr = bestPwr;
+          bestPwr = pwr;
+          primaryTower = tower;
+        } else if (pwr > secondBestPwr) {
+          secondBestPwr = pwr;
+        }
+      }
+
+      const sinr = Math.max(0, bestPwr - secondBestPwr);
+      const sqi = Math.max(0, Math.min(100, Math.floor(((bestPwr + 110) / 60) * 70 + (sinr / 30) * 30)));
+
+      // Update Dashboard Metrics UI
+      document.getElementById('stat-freq').innerText = primaryTower ? `${primaryTower.freqGHz.toFixed(2)} GHz` : 'N/A';
+      document.getElementById('stat-rssi').innerText = `${bestPwr.toFixed(1)} dBm`;
+      document.getElementById('stat-sinr').innerText = `${sinr.toFixed(1)} dB`;
+      document.getElementById('stat-sqi').innerText = `${sqi} / 100`;
+
+      // Update Signal Label
+      const rssiLabel = document.getElementById('stat-rssi-label');
+      if (bestPwr > -75) {
+        rssiLabel.innerText = 'Excellent Link'; rssiLabel.className = 'text-[10px] text-emerald-400 font-semibold';
+      } else if (bestPwr > -90) {
+        rssiLabel.innerText = 'Moderate Link'; rssiLabel.className = 'text-[10px] text-yellow-400 font-semibold';
+      } else {
+        rssiLabel.innerText = 'Weak / Deadzone'; rssiLabel.className = 'text-[10px] text-rose-400 font-semibold';
+      }
+
+      // Anomaly Detection Rule Matrix
+      const badge = document.getElementById('ai-state-badge');
+      const ping = document.getElementById('ai-status-ping');
+      const dot = document.getElementById('ai-status-dot');
+
+      if (bestPwr < -102) {
+        // Deadzone anomaly
+        badge.innerText = 'STATE: DEADZONE DETECTED';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30';
+        ping.className = 'animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75';
+        dot.className = 'relative inline-flex rounded-full h-3 w-3 bg-rose-500';
+        triggerAIAlerter("CRITICAL: AI Sensor lost connection. Signal power below receiver sensitivity threshold (-102 dBm).");
+      } else if (sinr < 4 && state.towers.length > 1) {
+        // High Interference / Jamming anomaly
+        badge.innerText = 'STATE: SEVERE INTERFERENCE';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30';
+        ping.className = 'animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75';
+        dot.className = 'relative inline-flex rounded-full h-3 w-3 bg-amber-500';
+        triggerAIAlerter("WARNING: Co-channel interference detected (SINR < 4dB). Destructive wave superposition active.");
+      } else {
+        // Optimal
+        badge.innerText = 'STATE: OPTIMAL COVERAGE';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        ping.className = 'animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75';
+        dot.className = 'relative inline-flex rounded-full h-3 w-3 bg-emerald-500';
+      }
+    }
+
+    let lastAlertTime = 0;
+    function triggerAIAlerter(msg) {
+      const now = Date.now();
+      if (now - lastAlertTime > 5000) {
+        addAILog(msg);
+        lastAlertTime = now;
+      }
+    }
+
+    function addAILog(text) {
+      const logBox = document.getElementById('ai-log');
+      const timeStr = new Date().toLocaleTimeString().split(' ')[0];
+      const entry = document.createElement('div');
+      entry.className = 'flex items-start gap-1.5 text-[11px] leading-relaxed';
+      entry.innerHTML = `<span class="text-slate-500">[${timeStr}]</span> <span class="text-slate-200">${text}</span>`;
+      logBox.appendChild(entry);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    /* ==========================================================================
+       User Interactions & Drag Engine
+       ========================================================================== */
+
+    function setupInteractions() {
+      mapCanvas.addEventListener('mousedown', onPointerDown);
+      mapCanvas.addEventListener('mousemove', onPointerMove);
+      mapCanvas.addEventListener('mouseup', onPointerUp);
+
+      mapCanvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          const touch = e.touches[0];
+          onPointerDown({ clientX: touch.clientX, clientY: touch.clientY });
+        }
+      }, { passive: true });
+
+      mapCanvas.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1) {
+          const touch = e.touches[0];
+          onPointerMove({ clientX: touch.clientX, clientY: touch.clientY });
+        }
+      }, { passive: true });
+
+      mapCanvas.addEventListener('touchend', onPointerUp);
+    }
+
+    function getCanvasCoords(e) {
+      const rect = mapCanvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (mapWidth / rect.width),
+        y: (e.clientY - rect.top) * (mapHeight / rect.height)
+      };
+    }
+
+    function onPointerDown(e) {
+      const pos = getCanvasCoords(e);
+
+      // Check Sensor Hit
+      const s = state.sensor;
+      if (Math.hypot(pos.x - s.x, pos.y - s.y) < 25) {
+        state.draggingNode = { type: 'sensor' };
+        state.dragOffset = { x: pos.x - s.x, y: pos.y - s.y };
+        return;
+      }
+
+      // Check Tower Hit
+      for (const tower of state.towers) {
+        if (Math.hypot(pos.x - tower.x, pos.y - tower.y) < 22) {
+          state.selectedTowerId = tower.id;
+          state.draggingNode = { type: 'tower', tower };
+          state.dragOffset = { x: pos.x - tower.x, y: pos.y - tower.y };
+          updateInspectorUI();
+          return;
+        }
+      }
+
+      // Check Obstacle Hit
+      for (const obs of state.obstacles) {
+        if (pos.x >= obs.x && pos.x <= obs.x + obs.w && pos.y >= obs.y && pos.y <= obs.y + obs.h) {
+          state.draggingNode = { type: 'obstacle', obs };
+          state.dragOffset = { x: pos.x - obs.x, y: pos.y - obs.y };
+          return;
+        }
+      }
+    }
+
+    function onPointerMove(e) {
+      const pos = getCanvasCoords(e);
+      document.getElementById('coord-readout').innerText = `X: ${Math.round(pos.x)}m, Y: ${Math.round(pos.y)}m`;
+
+      if (!state.draggingNode) return;
+
+      if (state.draggingNode.type === 'sensor') {
+        state.sensor.x = Math.max(10, Math.min(mapWidth - 10, pos.x - state.dragOffset.x));
+        state.sensor.y = Math.max(10, Math.min(mapHeight - 10, pos.y - state.dragOffset.y));
+      } else if (state.draggingNode.type === 'tower') {
+        const t = state.draggingNode.tower;
+        t.x = Math.max(10, Math.min(mapWidth - 10, pos.x - state.dragOffset.x));
+        t.y = Math.max(10, Math.min(mapHeight - 10, pos.y - state.dragOffset.y));
+      } else if (state.draggingNode.type === 'obstacle') {
+        const o = state.draggingNode.obs;
+        o.x = Math.max(0, Math.min(mapWidth - o.w, pos.x - state.dragOffset.x));
+        o.y = Math.max(0, Math.min(mapHeight - o.h, pos.y - state.dragOffset.y));
+      }
+    }
+
+    function onPointerUp() {
+      state.draggingNode = null;
+    }
+
+    /* ==========================================================================
+       UI Controls & Toolbar Handler
+       ========================================================================== */
+
+    function setViewMode(mode) {
+      state.viewMode = mode;
+      ['heatmap', 'waves', 'rays', 'interference'].forEach(m => {
+        const btn = document.getElementById(`btn-mode-${m}`);
+        if (m === mode) {
+          btn.className = 'px-2.5 py-1 rounded text-xs font-semibold bg-indigo-600 text-white shadow';
+        } else {
+          btn.className = 'px-2.5 py-1 rounded text-xs font-semibold text-[var(--muted-foreground)] hover:text-white transition';
+        }
+      });
+      addAILog(`Switched spatial visualizer mode to [${mode.toUpperCase()}].`);
+    }
+
+    function updateInspectorUI() {
+      const tower = state.towers.find(t => t.id === state.selectedTowerId);
+      if (!tower) {
+        document.getElementById('inspector-panel').classList.add('opacity-50', 'pointer-events-none');
+        return;
+      }
+      document.getElementById('inspector-panel').classList.remove('opacity-50', 'pointer-events-none');
+
+      document.getElementById('inspector-title').innerText = `Base Station #${tower.id} Parameters`;
+      document.getElementById('input-freq').value = tower.freqGHz;
+      document.getElementById('val-freq').innerText = `${tower.freqGHz} GHz`;
+      
+      document.getElementById('input-power').value = tower.powerDbm;
+      document.getElementById('val-power').innerText = `${tower.powerDbm} dBm`;
+
+      document.getElementById('input-beam').value = tower.beamAngle;
+      document.getElementById('val-beam').innerText = `${tower.beamAngle}°`;
+    }
+
+    function updateSelectedTower() {
+      const tower = state.towers.find(t => t.id === state.selectedTowerId);
+      if (!tower) return;
+
+      tower.freqGHz = parseFloat(document.getElementById('input-freq').value);
+      tower.powerDbm = parseInt(document.getElementById('input-power').value);
+      tower.beamAngle = parseInt(document.getElementById('input-beam').value);
+
+      document.getElementById('val-freq').innerText = `${tower.freqGHz.toFixed(1)} GHz`;
+      document.getElementById('val-power').innerText = `${tower.powerDbm} dBm`;
+      document.getElementById('val-beam').innerText = `${tower.beamAngle}°`;
+    }
+
+    function addTower() {
+      const newId = state.towers.length > 0 ? Math.max(...state.towers.map(t => t.id)) + 1 : 1;
+      const colors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+      const newTower = {
+        id: newId,
+        x: 100 + Math.random() * (mapWidth - 200),
+        y: 100 + Math.random() * (mapHeight - 200),
+        freqGHz: 3.5,
+        powerDbm: 40,
+        beamAngle: 0,
+        beamWidth: 360,
+        color: colors[newId % colors.length]
+      };
+      state.towers.push(newTower);
+      state.selectedTowerId = newId;
+      updateInspectorUI();
+      addAILog(`Deployed Base Station #${newId} at (${Math.round(newTower.x)}, ${Math.round(newTower.y)}).`);
+    }
+
+    function removeSelectedTower() {
+      if (state.towers.length <= 1) {
+        alert("At least one base station is required in the network.");
+        return;
+      }
+      state.towers = state.towers.filter(t => t.id !== state.selectedTowerId);
+      state.selectedTowerId = state.towers[0].id;
+      updateInspectorUI();
+      addAILog(`Decommissioned selected base station node.`);
+    }
+
+    // AI Heuristic Optimization Algorithm
+    function triggerAIOptimizer() {
+      addAILog("⚡ AI Neural Optimizer launched. Analyzing spatial grid coverage...");
+      
+      setTimeout(() => {
+        // Optimize beam angles and powers to minimize coverage holes
+        for (const tower of state.towers) {
+          // Adjust power based on proximity to obstacles and sensor
+          tower.powerDbm = Math.min(50, tower.powerDbm + 4);
+          if (tower.freqGHz > 10) {
+            tower.beamWidth = 90; // Focus mmWave beam
+            const dx = state.sensor.x - tower.x;
+            const dy = state.sensor.y - tower.y;
+            tower.beamAngle = Math.round((Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360);
+          }
+        }
+        updateInspectorUI();
+        addAILog("SUCCESS: AI Optimizer readjusted beamforming angles & power levels. Spatial coverage boosted +34%.");
+      }, 600);
+    }
+
+    function triggerAIFix() {
+      triggerAIOptimizer();
+    }
+
+    /* Preset Scenarios */
+    function loadPreset(presetKey) {
+      if (presetKey === 'urban5g') {
+        state.towers = [
+          { id: 1, x: 120, y: 110, freqGHz: 3.5, powerDbm: 42, beamAngle: 45, beamWidth: 120, color: '#6366f1' },
+          { id: 2, x: 500, y: 120, freqGHz: 28.0, powerDbm: 48, beamAngle: 200, beamWidth: 60, color: '#10b981' },
+          { id: 3, x: 300, y: 340, freqGHz: 28.0, powerDbm: 46, beamAngle: 310, beamWidth: 60, color: '#ec4899' }
+        ];
+        state.sensor = { x: 420, y: 200 };
+        setViewMode('heatmap');
+        addAILog("Loaded Preset: 🏙️ 5G Dense Urban mmWave Array.");
+      } else if (presetKey === 'jamming') {
+        state.towers = [
+          { id: 1, x: 140, y: 150, freqGHz: 2.4, powerDbm: 45, beamAngle: 0, beamWidth: 360, color: '#6366f1' },
+          { id: 2, x: 380, y: 160, freqGHz: 2.4, powerDbm: 50, beamAngle: 0, beamWidth: 360, color: '#ef4444' } // High power jammer
+        ];
+        state.sensor = { x: 300, y: 160 };
+        setViewMode('interference');
+        addAILog("Loaded Preset: 🚨 High-Power Co-Channel RF Jamming Attack.");
+      } else if (presetKey === 'rural') {
+        state.towers = [
+          { id: 1, x: 180, y: 220, freqGHz: 0.7, powerDbm: 48, beamAngle: 0, beamWidth: 360, color: '#f59e0b' }
+        ];
+        state.sensor = { x: 480, y: 220 };
+        setViewMode('waves');
+        addAILog("Loaded Preset: 🌾 Rural Low-Band 700MHz Macrocell.");
+      } else if (presetKey === 'hetnet') {
+        state.towers = [
+          { id: 1, x: 120, y: 120, freqGHz: 0.7, powerDbm: 44, beamAngle: 0, beamWidth: 360, color: '#f59e0b' },
+          { id: 2, x: 340, y: 100, freqGHz: 3.5, powerDbm: 40, beamAngle: 90, beamWidth: 120, color: '#6366f1' },
+          { id: 3, x: 500, y: 300, freqGHz: 28.0, powerDbm: 46, beamAngle: 240, beamWidth: 60, color: '#10b981' }
+        ];
+        state.sensor = { x: 320, y: 240 };
+        setViewMode('heatmap');
+        addAILog("Loaded Preset: 📡 Heterogeneous Multi-Band (Low/Mid/mmWave).");
+      }
+      state.selectedTowerId = state.towers[0].id;
+      updateInspectorUI();
+    }
+  </script>
+</body>
+</html>
